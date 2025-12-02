@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import './FoodItem.css'
-import { assets } from '../../assets/assets'
+import { assets , foodImageMap} from '../../assets/assets'
 import { StoreContext } from '../../context/StoreContext'
 
 const FoodItem = ({id,name,price,description,image}) => {
@@ -8,6 +8,8 @@ const FoodItem = ({id,name,price,description,image}) => {
     // const [itemCount,setItemCount] = useState(0)
     // not used since a new state is create for every situation
     const {cartItems, addToCart, removeFromCart} = useContext(StoreContext);
+    const imageKey = image.replace(/^\d+/, '');
+    const imageSrc = foodImageMap[imageKey];
 
   return (
     <div className='food-item'>
@@ -37,3 +39,6 @@ const FoodItem = ({id,name,price,description,image}) => {
 }
 
 export default FoodItem
+
+
+

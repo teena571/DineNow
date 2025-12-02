@@ -2,6 +2,7 @@ import React, { useContext } from 'react'
 import './FoodDisplay.css'
 import {StoreContext} from '../../context/StoreContext'
 import FoodItem from '../FoodItem/FoodItem'
+import { foodImageMap } from '../../assets/assets'
 
 const FoodDisplay = ({category}) => {
 
@@ -14,7 +15,10 @@ const FoodDisplay = ({category}) => {
         {food_list.map((item,index) => {
 
             if(category==="All" || category===item.category){
-                return <FoodItem key={index} id={item._id} name={item.name} description={item.description} price={item.price} image={item.image}/>
+                const imageKey = item.image.replace(/^\d+/, '');
+                let imageSrc = foodImageMap[imageKey] || item.image; 
+                console.log(item.name, item.image, imageSrc);
+                return <FoodItem key={index} id={item._id} name={item.name} description={item.description} price={item.price} image={imageSrc}/>
             }
         })}
       </div>

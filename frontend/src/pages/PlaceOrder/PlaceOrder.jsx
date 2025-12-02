@@ -6,6 +6,65 @@ const PlaceOrder = () => {
 
   const {getTotalCartAmount} = useContext(StoreContext)
 
+  const totalAmount = getTotalCartAmount() === 0 ? 0 : getTotalCartAmount() + 2;
+
+  const handlePayment = async (e) => {
+    e.preventDefault();
+    if (totalAmount === 0) {
+      alert("Your cart is empty!");
+      return;
+    }
+
+    try {
+      // 1️⃣ Create Razorpay order on backend
+      const res = await fetch("http://localhost:4000/api/payment/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: totalAmount }), // in rupees
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        alert("Failed to create order. Try again!");
+        return;
+      }
+
+      const { order } = data;
+
+      // 2️⃣ Setup Razorpay checkout
+      const options = {
+        key: "rzp_test_XXXXXXXXXXXX", // replace with your Razorpay key id
+        amount: order.amount,
+        currency: order.currency,
+        name: "DineNow",
+        description: "Food Delivery Payment",
+        order_id: order.id,
+        handler: async function (response) {
+          // 3️⃣ Verify payment on backend
+          const verifyRes = await fetch("http://localhost:4000/api/payment/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(response),
+          });
+
+          const verifyData = await verifyRes.json();
+          if (verifyData.success) {
+            alert("✅ Payment Successful!");
+          } else {
+            alert("❌ Payment verification failed!");
+          }
+        },
+        theme: { color: "#F37254" },
+      };
+
+      const razor = new window.Razorpay(options);
+      razor.open();
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong during payment!");
+    }
+  };
+
   return (
     <form className='place-order'>
       <div className="place-order-left">
