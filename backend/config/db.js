@@ -6,11 +6,15 @@
 
 
 import mongoose from "mongoose";
+import dotenv from "dotenv";
+
+dotenv.config();
+
 
 export const connectDB = async () => {
   try {
     await mongoose.connect(
-      'mongodb+srv://teenarai571_db_user:G9CB9tyYNFolMmPZ@cluster.hynxywh.mongodb.net/DineNow',
+      process.env.MONGO_URI,
       { 
         useNewUrlParser: true, 
         useUnifiedTopology: true 
@@ -22,3 +26,5 @@ export const connectDB = async () => {
     process.exit(1); // stop server if DB fails
   }
 };
+
+// PAts23xW8EOCbO7p
