@@ -92,7 +92,17 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 app.use(express.json());
-app.use(cors());
+
+// CORS configuration: allow frontend origin via env var `FRONTEND_URL` or `CORS_ORIGIN`.
+const allowedOrigin = process.env.FRONTEND_URL || process.env.CORS_ORIGIN || "http://localhost:5173";
+console.log("CORS allowed origin:", allowedOrigin);
+app.use(
+  cors({
+    origin: allowedOrigin,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    credentials: true,
+  })
+);
 
 app.get("/", (req, res) => {
   res.send("API Working");
