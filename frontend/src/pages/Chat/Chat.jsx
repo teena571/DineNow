@@ -141,7 +141,8 @@
 
 // export default Chat;
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
+import { StoreContext } from "../../context/StoreContext";
 import "./Chat.css"; // Optional: style your chat UI
 
 const formatMessage = (text) => {
@@ -153,6 +154,8 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const chatEndRef = useRef(null);
+
+  const { url } = useContext(StoreContext);
 
   // Auto-scroll to bottom when messages update
   useEffect(() => {
@@ -168,7 +171,7 @@ const Chat = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:4000/api/gemini/chat", {
+      const response = await fetch(`${url}/api/gemini/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: input }), // ✅ Corrected key

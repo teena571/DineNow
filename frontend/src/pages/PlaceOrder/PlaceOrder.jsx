@@ -4,7 +4,7 @@ import { StoreContext } from '../../context/StoreContext'
 
 const PlaceOrder = () => {
 
-  const {getTotalCartAmount} = useContext(StoreContext)
+  const {getTotalCartAmount, url} = useContext(StoreContext)
 
   const totalAmount = getTotalCartAmount() === 0 ? 0 : getTotalCartAmount() + 2;
 
@@ -17,7 +17,7 @@ const PlaceOrder = () => {
 
     try {
       // 1️⃣ Create Razorpay order on backend
-      const res = await fetch("http://localhost:4000/api/payment/create-order", {
+      const res = await fetch(`${url}/api/payment/create-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount: totalAmount }), // in rupees
@@ -41,7 +41,7 @@ const PlaceOrder = () => {
         order_id: order.id,
         handler: async function (response) {
           // 3️⃣ Verify payment on backend
-          const verifyRes = await fetch("http://localhost:4000/api/payment/verify", {
+          const verifyRes = await fetch(`${url}/api/payment/verify`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(response),

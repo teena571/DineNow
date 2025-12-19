@@ -129,8 +129,8 @@ const LoginPopup = ({ setShowLogin }) => {
 
     const endpoint =
       currState === "Sign Up"
-        ? "http://localhost:4000/api/user/register"
-        : "http://localhost:4000/api/user/login"
+        ? `${url}/api/user/register`
+        : `${url}/api/user/login`
 
     const payload =
       currState === "Sign Up"
