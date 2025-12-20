@@ -93,16 +93,24 @@ const port = process.env.PORT || 4000;
 
 app.use(express.json());
 
-// CORS configuration: allow frontend origin via env var `FRONTEND_URL` or `CORS_ORIGIN`.
-const allowedOrigin = process.env.FRONTEND_URL || process.env.CORS_ORIGIN || "http://localhost:5173";
-console.log("CORS allowed origin:", allowedOrigin);
-app.use(
-  cors({
-    origin: allowedOrigin,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    credentials: true,
-  })
-);
+// CORS configuration: support a comma-separated list in `FRONTEND_URLS`
+// Fallbacks: `FRONTEND_URL`, `CORS_ORIGIN`, or localhost for local dev.
+const rawAllowed = process.env.FRONTEND_URLS || process.env.FRONTEND_URL || process.env.CORS_ORIGIN || "http://localhost:5173";
+const allowedOrigins = rawAllowed.split(",").map(s => s.trim()).filter(Boolean);
+console.log("CORS allowed origins:", allowedOrigins);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, or server-to-server)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+    return callback(new Error("CORS policy: origin not allowed"), false);
+  },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  credentials: true,
+}));
 
 app.get("/", (req, res) => {
   res.send("API Working");
