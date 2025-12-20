@@ -74,14 +74,10 @@ const PlaceOrder = () => {
           <input type="text" placeholder='Last Name'/>
         </div>
         <input type="email" placeholder='Email Address'/>
-        <input type="text" placeholder='Street'/>
+        <input type="text" placeholder='How many people is the booking for?'/>
         <div className="multi-fields">
+          <input type="text" placeholder='Table Number'/>
           <input type="text" placeholder='City'/>
-          <input type="text" placeholder='State'/>
-        </div>
-        <div className="multi-fields">
-          <input type="text" placeholder='Zip Code'/>
-          <input type="text" placeholder='Country'/>
         </div>
         <input type="text" placeholder='Phone'/>
       </div>
