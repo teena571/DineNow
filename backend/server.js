@@ -1,78 +1,3 @@
-// // import express from "express"
-// // import cors from "cors"
-// // import { connectDB } from "./config/db.js"
-// // import foodRouter from "./routes/foodRoute.js"
-// // import userRouter from "./routes/userRoute.js"
-// // import 'dotenv/config'
-// // import userModel from "./models/userModel.js"
-// // import cartRouter from "./routes/cartRoute.js"
-// // import orderRouter from "./routes/orderRoute.js"
-// // import paymentRouter from "./routes/payment.js"; // ✅ new line
-// // import "dotenv/config";
-
-// // const app = express()
-// // const port = 4000
-
-// // app.use(express.json())
-// // app.use(cors())
-
-// // app.get("/",(req,res) => {
-// //     res.send("API Working")
-// // })
-
-// // connectDB();
-
-// // app.use("/api/food",foodRouter)
-// // app.use("/images",express.static('uploads'))
-// // app.use("/api/user",userRouter)
-// // app.use("/api/cart",cartRouter)
-// // app.use("/api/order",orderRouter)
-// // app.use("/api/payment", paymentRouter);
-
-// // app.listen(port,() => {
-// //     console.log(`Server Started on http://localhost:${port}`)
-// // })
-
-
-
-
-// import express from "express";
-// import cors from "cors";
-// import { connectDB } from "./config/db.js";
-// import foodRouter from "./routes/foodRoute.js";
-// import userRouter from "./routes/userRoute.js";
-// import "dotenv/config";
-// import userModel from "./models/userModel.js";
-// import cartRouter from "./routes/cartRoute.js";
-// import orderRouter from "./routes/orderRoute.js";
-// import paymentRouter from "./routes/payment.js";
-// import geminiRouter from "./routes/geminiRoute.js"; 
-
-// const app = express();
-// const port = 4000;
-
-// app.use(express.json());
-// app.use(cors());
-
-// app.get("/", (req, res) => {
-//   res.send("API Working");
-// });
-
-// connectDB();
-
-// app.use("/api/food", foodRouter);
-// app.use("/images", express.static("uploads"));
-// app.use("/api/user", userRouter);
-// app.use("/api/cart", cartRouter);
-// app.use("/api/order", orderRouter);
-// app.use("/api/payment", paymentRouter);
-// app.use("/api/gemini", geminiRouter); 
-
-// app.listen(port, () => {
-//   console.log(`🚀 Server Started on http://localhost:${port}`);
-// });
-
-
 
 
 
@@ -85,17 +10,17 @@ import "dotenv/config";
 import userModel from "./models/userModel.js";
 import cartRouter from "./routes/cartRoute.js";
 import orderRouter from "./routes/orderRoute.js";
-import paymentRouter from "./routes/payment.js";
 import geminiRouter from "./routes/geminiRoute.js";
+import tableRouter from "./routes/tableRoute.js";
 
 const app = express();
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 5000;
 
 app.use(express.json());
 
 // CORS configuration: support a comma-separated list in `FRONTEND_URLS`
 // Fallbacks: `FRONTEND_URL`, `CORS_ORIGIN`, or localhost for local dev.
-const rawAllowed = process.env.FRONTEND_URLS || process.env.FRONTEND_URL || process.env.CORS_ORIGIN || "http://localhost:5173";
+const rawAllowed = process.env.FRONTEND_URLS || process.env.FRONTEND_URL || process.env.CORS_ORIGIN || "http://localhost:5173,http://localhost:5175,http://localhost:5176,http://localhost:5177,http://localhost:5180,http://localhost:5183,http://192.168.56.1:5173,http://10.48.105.158:5173,http://192.168.0.208:5173";
 const allowedOrigins = rawAllowed.split(",").map(s => s.trim()).filter(Boolean);
 console.log("CORS allowed origins:", allowedOrigins);
 
@@ -118,16 +43,42 @@ app.get("/", (req, res) => {
 
 connectDB();
 
+// Seed tables on server start
+const seedTables = async () => {
+  try {
+    const tableModel = (await import('./models/tableModel.js')).default;
+    const existingTables = await tableModel.find();
+    if (existingTables.length === 0) {
+      console.log('Seeding tables...');
+      const tables = [];
+      for (let i = 1; i <= 20; i++) {
+        tables.push({ tableNo: i, status: 'available' });
+      }
+      await tableModel.insertMany(tables);
+      console.log('Tables seeded successfully');
+    } else {
+      console.log(`Tables already exist: ${existingTables.length}`);
+    }
+  } catch (error) {
+    console.error('Error seeding tables:', error);
+  }
+};
+
+seedTables();
+
 app.use("/api/food", foodRouter);
 app.use("/images", express.static("uploads"));
 app.use("/api/user", userRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
-app.use("/api/payment", paymentRouter);
 
 // Gemini route
 app.use("/api/gemini", geminiRouter);
 
-app.listen(port, () => {
-  console.log(`🚀 Server Started on http://localhost:${port}`);
+// Table route
+app.use("/api/tables", tableRouter);
+
+// Trigger nodemon restart after fixing syntax error
+app.listen(port, '0.0.0.0', () => {
+  console.log(`🚀 Server Started on http://0.0.0.0:${port}`);
 });

@@ -13,11 +13,12 @@ dotenv.config();
 
 export const connectDB = async () => {
   try {
+    const mongoUri = process.env.MONGO_URI || 'mongodb+srv://teenarai571_db_user:G9CB9tyYNFolMmPZ@cluster.hynxywh.mongodb.net/DineNow';
     await mongoose.connect(
-      process.env.MONGO_URI,
-      { 
-        useNewUrlParser: true, 
-        useUnifiedTopology: true 
+      mongoUri,
+      {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
       }
     );
     console.log("DB Connected");
