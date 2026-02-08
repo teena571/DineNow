@@ -34,7 +34,7 @@ const listFood = async ( req,res) => {
 }
 
 
-//remove food item 
+//remove food item
 const removeFood = async (req, res) => {
     try {
         const foodId = req.body.id; // <- get id from URL
@@ -60,4 +60,19 @@ const removeFood = async (req, res) => {
     }
 };
 
-export {addFood,listFood,removeFood} 
+//search food items
+const searchFood = async (req, res) => {
+    try {
+        const query = req.query.query;
+        if (!query) {
+            return res.json({ success: true, data: [] });
+        }
+        const foods = await foodModel.find({ name: { $regex: query, $options: 'i' } });
+        res.json({ success: true, data: foods });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: "Error" });
+    }
+};
+
+export {addFood,listFood,removeFood,searchFood}

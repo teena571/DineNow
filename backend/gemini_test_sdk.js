@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-dotenv.config();
+dotenv.config({ path: './backend/.env' });
 
 const KEY = process.env.GEMINI_API_KEY;
 if (!KEY) {

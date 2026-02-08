@@ -59,11 +59,12 @@ import './Navbar.css'
 import { assets } from '../../assets/assets'
 import { Link, useNavigate } from 'react-router-dom'
 import { StoreContext } from '../../context/StoreContext'
+import toast from 'react-hot-toast'
 
 const Navbar = ({ setShowLogin }) => {
 
   const [menu, setMenu] = useState("home");
-  const { getTotalCartAmount, setToken } = useContext(StoreContext);
+  const { getTotalCartAmount, setToken, searchTerm, setSearchTerm, setSearchResults, food_list } = useContext(StoreContext);
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
@@ -74,19 +75,69 @@ const Navbar = ({ setShowLogin }) => {
     navigate("/");
   };
 
+  const handleSearch = async (e) => {
+    const query = e.target.value;
+    setSearchTerm(query);
+
+    if (query.trim()) {
+      // Check if item exists in food_list
+      const foundItems = food_list.filter(item =>
+        item.name.toLowerCase().includes(query.toLowerCase())
+      );
+
+      if (foundItems.length > 0) {
+        toast.success(`${foundItems[0].name} is available!`);
+      } else {
+        toast.error(`${query} is not available`);
+      }
+
+      // Scroll to food display
+      const foodDisplay = document.getElementById('food-display');
+      if (foodDisplay) {
+        foodDisplay.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } else {
+      setSearchResults([]);
+    }
+  };
+
   return (
     <div className='navbar'>
       <Link to='/'><img src={assets.logo} className='logo' alt='logo' /></Link>
 
       <ul className="navbar-menu">
         <Link to='/' onClick={() => setMenu("home")} className={menu === "home" ? "active" : ""}>Home</Link>
-        <a href='#explore-menu' onClick={() => setMenu("menu")} className={menu === "menu" ? "active" : ""}>Menu</a>
-        <a href='#app-download' onClick={() => setMenu("mobile-app")} className={menu === "mobile-app" ? "active" : ""}>Mobile App</a>
+        <Link to='/table-select' onClick={() => setMenu("table")} className={menu === "table" ? "active" : ""}><span style={{ fontSize: '14px' }}>🪑</span> My Table</Link>
         <a href='#footer' onClick={() => setMenu("contact-us")} className={menu === "contact-us" ? "active" : ""}>Contact Us</a>
       </ul>
 
       <div className="navbar-right">
-        <img src={assets.search_icon} alt="search" />
+        <div className="search-bar">
+          <input
+            type="text"
+            placeholder="Search food items..."
+            value={searchTerm}
+            onChange={handleSearch}
+            className="search-input"
+          />
+          <img
+            src={assets.search_icon}
+            alt="search"
+            className="search-icon"
+            onClick={() => {
+              if (searchTerm.trim()) {
+                // Trigger search and scroll
+                handleSearch({ target: { value: searchTerm } });
+                // Scroll to food display section
+                const foodDisplay = document.getElementById('food-display');
+                if (foodDisplay) {
+                  foodDisplay.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }
+            }}
+            style={{ cursor: 'pointer' }}
+          />
+        </div>
 
         <div className="navbar-search-icon">
           <Link to='/cart'><img src={assets.basket_icon} alt="cart" /></Link>

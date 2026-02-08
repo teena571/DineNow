@@ -1,9 +1,9 @@
-import React, { useContext } from 'react'
+import React, { useContext, forwardRef } from 'react'
 import './FoodItem.css'
 import { assets , foodImageMap} from '../../assets/assets'
 import { StoreContext } from '../../context/StoreContext'
 
-const FoodItem = ({id,name,price,description,image}) => {
+const FoodItem = forwardRef(({id,name,price,description,image}, ref) => {
 
     // const [itemCount,setItemCount] = useState(0)
     // not used since a new state is create for every situation
@@ -17,13 +17,13 @@ const FoodItem = ({id,name,price,description,image}) => {
       try {
         const imageKey = image.replace(/^\d+/, '');
         imageSrc = foodImageMap[imageKey] || image;
-      } catch (e) {
+      } catch {
         imageSrc = image;
       }
     }
 
   return (
-    <div className='food-item'>
+    <div className='food-item' ref={ref}>
       <div className="food-item-image-container">
         <img className='food-item-image' src={imageSrc} alt={name || "food"} />
         {!count
@@ -47,9 +47,6 @@ const FoodItem = ({id,name,price,description,image}) => {
 
     </div>
   )
-}
+})
 
 export default FoodItem
-
-
-

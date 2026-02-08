@@ -2,8 +2,9 @@ import mongoose from "mongoose"
 
 const userSchema = new mongoose.Schema({
     name: {type:String,required:true},
-    email: {type:String,required:true,unique:true},
-    password:{type:String,required:true},
+    email: {type:String,required:false},
+    password:{type:String,required:false},
+    phone: {type:String,required:false,unique:true},
     cartData:{type:Object,default:{}}
 },{minimize:false})
 

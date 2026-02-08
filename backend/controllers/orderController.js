@@ -105,14 +105,16 @@
 
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
+import reservationModel from "../models/reservationModel.js";
 import Razorpay from "razorpay";
+import 'dotenv/config';
 import crypto from "crypto";
 
 // 🔐 Razorpay setup
-const razorpay = new Razorpay({
-    key_id: "rzp_test_RR1AMbrFdXuvBc",      // ⚠️ Replace with your Razorpay test key_id
-    key_secret: "f7pWuvERtqcIEOmcgf8Y1pKb"  // ⚠️ Replace with your Razorpay test key_secret
-});
+// const razorpay = new Razorpay({
+//     key_id: process.env.RAZORPAY_KEY_ID,
+//     key_secret: process.env.RAZORPAY_KEY_SECRET
+// });
 
 // 🌍 Config variables
 const currency = "INR";
@@ -122,7 +124,16 @@ const frontend_URL = "http://localhost:5173"; // Change this to your frontend UR
 // 🧾 Place User Order (Frontend)
 const placeOrder = async (req, res) => {
     try {
-        const { userId, items, amount, address } = req.body;
+        const { userId, items, amount, address, tableNumber } = req.body;
+
+        // Check if the table is reserved by the user
+        const reservation = await reservationModel.findOne({ userId, tableNo: tableNumber });
+        if (!reservation) {
+            return res.json({ success: false, message: "Table not reserved by user" });
+        }
+
+        // Generate bill number
+        const billNumber = `BILL-${Date.now()}`;
 
         // 1️⃣ Create new order in DB
         const newOrder = new orderModel({
@@ -130,6 +141,8 @@ const placeOrder = async (req, res) => {
             items,
             amount,
             address,
+            tableNumber,
+            billNumber,
         });
         await newOrder.save();
 
@@ -137,22 +150,27 @@ const placeOrder = async (req, res) => {
         await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
         // 3️⃣ Create order in Razorpay
-        const options = {
-            amount: (amount + deliveryCharge) * 100, // in paise
-            currency,
-            receipt: `receipt_${newOrder._id}`,
-        };
+        // const options = {
+        //     amount: (amount + deliveryCharge) * 100, // in paise
+        //     currency,
+        //     receipt: `receipt_${newOrder._id}`,
+        // };
 
-        const razorOrder = await razorpay.orders.create(options);
+        // const razorOrder = await razorpay.orders.create(options);
 
         // 4️⃣ Send order details to frontend
         res.json({
             success: true,
             orderId: newOrder._id,
-            razorpayOrderId: razorOrder.id,
-            amount: razorOrder.amount,
-            currency: razorOrder.currency,
-            key: "rzp_test_RR1AMbrFdXuvBc", // frontend needs this
+            // razorpayOrderId: razorOrder.id,
+            // amount: razorOrder.amount,
+            // currency: razorOrder.currency,
+            // key: process.env.RAZORPAY_KEY_ID, // frontend needs this
+            billNumber,
+            tableNo: tableNumber,
+            items: newOrder.items,
+            totalAmount: newOrder.amount,
+            status: newOrder.orderStatus,
         });
 
     } catch (error) {
@@ -163,28 +181,29 @@ const placeOrder = async (req, res) => {
 
 // 🧾 Verify Payment (called after successful payment)
 const verifyOrder = async (req, res) => {
-    try {
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
+    res.json({ success: true, message: "Payment Verified (Dev Mode) ✅" });
+    // try {
+    //     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
 
-        // 1️⃣ Create expected signature
-        const generated_signature = crypto
-            .createHmac("sha256", "f7pWuvERtqcIEOmcgf8Y1pKb")
-            .update(razorpay_order_id + "|" + razorpay_payment_id)
-            .digest("hex");
+    //     // 1️⃣ Create expected signature
+    //     const generated_signature = crypto
+    //         .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+    //         .update(razorpay_order_id + "|" + razorpay_payment_id)
+    //         .digest("hex");
 
-        // 2️⃣ Match signatures
-        if (generated_signature === razorpay_signature) {
-            await orderModel.findByIdAndUpdate(orderId, { payment: true });
-            res.json({ success: true, message: "Payment Verified ✅" });
-        } else {
-            await orderModel.findByIdAndDelete(orderId);
-            res.json({ success: false, message: "Payment Verification Failed ❌" });
-        }
+    //     // 2️⃣ Match signatures
+    //     if (generated_signature === razorpay_signature) {
+    //         await orderModel.findByIdAndUpdate(orderId, { payment: true });
+    //         res.json({ success: true, message: "Payment Verified ✅" });
+    //     } else {
+    //         await orderModel.findByIdAndDelete(orderId);
+    //         res.json({ success: false, message: "Payment Verification Failed ❌" });
+    //     }
 
-    } catch (error) {
-        console.log("Error in verifyOrder:", error);
-        res.json({ success: false, message: "Error while verifying order" });
-    }
+    // } catch (error) {
+    //     console.log("Error in verifyOrder:", error);
+    //     res.json({ success: false, message: "Error while verifying order" });
+    // }
 };
 
 // 📋 List Orders (for Admin Panel)
@@ -220,5 +239,125 @@ const updateStatus = async (req, res) => {
     }
 };
 
+// 📋 Get Order Details by Order ID
+const getOrderDetails = async (req, res) => {
+    try {
+        const order = await orderModel.findById(req.params.orderId);
+        if (!order) {
+            return res.json({ success: false, message: "Order not found" });
+        }
+        res.json({ success: true, data: order });
+    } catch (error) {
+        console.log("Error in getOrderDetails:", error);
+        res.json({ success: false, message: "Error fetching order details" });
+    }
+};
+
+// 🔄 Update Order Info (Status, Waiter)
+const updateOrderInfo = async (req, res) => {
+    try {
+        const { orderId, orderStatus, waiterAssigned } = req.body;
+        await orderModel.findByIdAndUpdate(orderId, { orderStatus, waiterAssigned });
+        res.json({ success: true, message: "Order Info Updated ✅" });
+    } catch (error) {
+        console.log("Error in updateOrderInfo:", error);
+        res.json({ success: false, message: "Error updating order info" });
+    }
+};
+
+// 👤 Get User Orders by User ID (GET)
+const getUserOrdersById = async (req, res) => {
+    try {
+        const orders = await orderModel.find({ userId: req.params.userId });
+        res.json({ success: true, data: orders });
+    } catch (error) {
+        console.log("Error in getUserOrdersById:", error);
+        res.json({ success: false, message: "Error fetching user orders" });
+    }
+};
+
+// 📋 Get Orders by Table Number
+const getOrdersByTable = async (req, res) => {
+    try {
+        const orders = await orderModel.find({ tableNumber: req.params.tableNo });
+        res.json({ success: true, data: orders });
+    } catch (error) {
+        console.log("Error in getOrdersByTable:", error);
+        res.json({ success: false, message: "Error fetching orders by table" });
+    }
+};
+
+// 💳 Demo Pay (Simulate Payment)
+const demoPay = async (req, res) => {
+    try {
+        const { orderId } = req.body;
+
+        // Update order payment status to true
+        const updatedOrder = await orderModel.findByIdAndUpdate(orderId, { payment: true }, { new: true });
+
+        if (!updatedOrder) {
+            return res.json({ success: false, message: "Order not found" });
+        }
+
+        res.json({
+            success: true,
+            message: "Payment simulated for demo",
+            order: updatedOrder
+        });
+    } catch (error) {
+        console.log("Error in demoPay:", error);
+        res.json({ success: false, message: "Error simulating payment" });
+    }
+};
+
+// 💳 Fake Payment (Create Order with Payment)
+const fakePayment = async (req, res) => {
+    try {
+        const { userId, items, amount, tableNo } = req.body;
+
+        // Check if the table is reserved by the user
+        const reservation = await reservationModel.findOne({ userId, tableNo });
+        if (!reservation) {
+            return res.json({ success: false, message: "Table not reserved by user" });
+        }
+
+        // Generate bill number
+        const billNumber = `BILL-${Date.now()}`;
+
+        // Create new order in DB with payment and order status
+        const newOrder = new orderModel({
+            userId,
+            items,
+            amount,
+            address: { tableNumber: tableNo },
+            tableNumber: tableNo,
+            billNumber,
+            payment: true,
+            paymentStatus: "PAID",
+            orderStatus: "CONFIRMED"
+        });
+        await newOrder.save();
+
+        // Clear user cart
+        await userModel.findByIdAndUpdate(userId, { cartData: {} });
+
+        // Return success response with order details
+        res.json({
+            success: true,
+            orderId: newOrder._id,
+            billNumber,
+            paymentStatus: "PAID",
+            orderStatus: "CONFIRMED",
+            items: newOrder.items,
+            totalAmount: newOrder.amount,
+            tableNo
+        });
+
+    } catch (error) {
+        console.log("Error in fakePayment:", error);
+        res.json({ success: false, message: "Error processing fake payment" });
+    }
+};
+
 // 📤 Export all
-export { placeOrder, verifyOrder, listOrders, userOrders, updateStatus };
+export { placeOrder, verifyOrder, listOrders, userOrders, updateStatus, getOrderDetails, updateOrderInfo, getUserOrdersById, getOrdersByTable, demoPay, fakePayment };

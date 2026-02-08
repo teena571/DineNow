@@ -7,7 +7,12 @@ const orderSchema = new mongoose.Schema({
     address:{type:Object,required:true},
     status:{type:String,default:"Food Processing"},
     date:{type:Date,default:Date.now()},
-    payment:{type:Boolean,default:false}
+    payment:{type:Boolean,default:false},
+    paymentStatus:{type:String,default:"PENDING"},
+    tableNumber:{type:String,required:true},
+    orderStatus:{type:String,default:"Pending"},
+    waiterAssigned:{type:String,default:""},
+    billNumber:{type:String,unique:true}
 })
 
 

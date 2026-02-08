@@ -1,17 +1,24 @@
-import { createContext, useEffect, useState } from "react";
-import { food_list } from "../assets/assets";
+import { useEffect, useState, useCallback } from "react";
+import { food_list as staticFoodList } from "../assets/assets";
 import axios from "axios";
-
-export const StoreContext = createContext(null)
+import { StoreContext } from "./StoreContext.js";
 
 const StoreContextProvider = (props) => {
-    
+
     const [cartItems, setCartItems] = useState({});
     // Determine API base from Vite env, remove any trailing /api so existing code can append /api/*
-    const envApi = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+    const envApi = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
     const url = envApi.replace(/\/api\/?$/, "");
     const [token,setToken] = useState("");
     const [food_list,setFoodList] = useState([])
+    const [tableNo, setTableNo] = useState("");
+    const [orderStatus, setOrderStatus] = useState("Pending");
+    const [waiterAssigned, setWaiterAssigned] = useState("");
+    const [billNumber, setBillNumber] = useState("");
+    const [orderId, setOrderId] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
+    const [userId, setUserId] = useState("");
 
     const addToCart = async (itemId) => {
         if (!cartItems[itemId]){
@@ -66,19 +73,29 @@ const StoreContextProvider = (props) => {
         if(localStorage.getItem("token")){
             setToken(localStorage.getItem("token"))
         }
+        if(localStorage.getItem("tableNo")){
+            setTableNo(localStorage.getItem("tableNo"))
+        }
     },[])
 
-    const fetchFoodList = async() => {
+    const fetchFoodList = useCallback(async() => {
         try {
             const response = await axios.get(`${url}/api/food/list`);
-            setFoodList(response.data.data);
+            if (response.data.data && response.data.data.length > 0) {
+                setFoodList(response.data.data);
+            } else {
+                // Fallback to static food list if DB is empty
+                setFoodList(staticFoodList);
+            }
         } catch (error) {
             console.error("Error fetching food list:", error);
+            // Fallback to static food list on error
+            setFoodList(staticFoodList);
         }
-    }
+    }, [url]);
 
 
-    const loadCartData = async (token) => {
+    const loadCartData = useCallback(async (token) => {
         try {
             const response = await axios.post(url+"/api/cart/get",{},{headers:{token}})
             // Ensure we always keep cartItems as an object
@@ -87,7 +104,7 @@ const StoreContextProvider = (props) => {
             console.error("Error loading cart data:", err);
             setCartItems({});
         }
-    }
+    }, [url]);
 
 
     useEffect(() => {
@@ -99,7 +116,7 @@ const StoreContextProvider = (props) => {
             }
         }
         loadData();
-    },[])
+    },[fetchFoodList, loadCartData])
 
 
     const contextValue = {
@@ -110,7 +127,15 @@ const StoreContextProvider = (props) => {
         removeFromCart,
         getTotalCartAmount,
         url,
-        token,setToken
+        token,setToken,
+        tableNo, setTableNo,
+        orderStatus, setOrderStatus,
+        waiterAssigned, setWaiterAssigned,
+        billNumber, setBillNumber,
+        orderId, setOrderId,
+        searchTerm, setSearchTerm,
+        searchResults, setSearchResults,
+        userId, setUserId
     }
 
     return(

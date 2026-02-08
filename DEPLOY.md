@@ -1,36 +1,59 @@
 Deployment notes
 
-Frontend (Vercel)
+## Environment Variables
+
+### Backend (.env)
+- `MONGO_URI`: MongoDB connection string (e.g., mongodb+srv://...)
+- `GEMINI_API_KEY`: Google Gemini API key for AI features
+- `JWT_SECRET`: Secret key for JWT token signing
+- `RAZORPAY_KEY_ID`: Razorpay payment gateway key ID
+- `RAZORPAY_KEY_SECRET`: Razorpay payment gateway secret
+- `FRONTEND_URLS`: Comma-separated list of allowed frontend URLs (e.g., https://your-frontend.vercel.app,http://localhost:5177)
+- `PORT`: Server port (default: 5000)
+
+### Frontend (Vite env vars)
+- `VITE_API_URL`: Backend API URL (e.g., https://your-backend.onrender.com/api or http://localhost:5000/api)
+
+### ChatGPT App
+- `OPENAI_API_KEY`: OpenAI API key for ChatGPT integration
+- `PORT`: Server port (default: 3000)
+
+## Deployment Steps
+
+### Frontend (Vercel)
 - Create a new project on Vercel and point it to this repository.
 - Set the Project Root to `frontend`.
 - Build command: `npm run build`
 - Output directory: `dist`
-- Environment variables (if needed) can be set in Vercel dashboard (e.g., API base URL for the backend).
+- Environment variables: Set `VITE_API_URL` to your backend's public URL.
 
-Backend (Render)
-- Create a new Web Service on Render (or DigitalOcean/App Service).
-- Connect the same repository and set the root to `backend` (or provide a subdirectory build path).
-- Build command: leave blank (Node apps usually don't need a build) or `npm install`.
-- Start command: `npm start` (this uses `node server.js`).
-- Add environment variables in Render dashboard (e.g., `MONGO_URI`, `GEMINI_API_KEY`, `JWT_SECRET`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`).
-- Render will set `PORT` environment variable; the backend now uses `process.env.PORT || 4000`.
+### Backend (Render)
+- Create a new Web Service on Render.
+- Connect the repository and set the root to `backend`.
+- Build command: `npm install`
+- Start command: `npm start`
+- Add all backend environment variables in Render dashboard.
+- Render will set `PORT` automatically.
 
-Notes
-- Keep real secrets out of the repo. Use the `backend/.env.example` placeholders and set actual values in the host dashboards.
-- If you want to host both frontend and backend on a single platform, consider using Vercel Functions (requires code changes) or deploy backend as a separate service.
-- After deployment, set the frontend to call the backend's public URL and configure CORS if necessary.
+### Admin Panel (Vercel or Netlify)
+- Similar to frontend, set root to `admin/vite-project`.
+- Build command: `npm run build`
+- Output directory: `dist`
 
-Quick local test
-- Build frontend locally:
-  cd frontend
-  npm install
-  npm run build
+### ChatGPT App (Render or Heroku)
+- Set root to `chatgpt-app`.
+- Build command: `npm run build`
+- Start command: `npm start`
+- Add `OPENAI_API_KEY` and `PORT`.
 
-- Run backend locally:
-  cd backend
-  npm install
-  npm start
+## Notes
+- Keep real secrets out of the repo. Use placeholders in .env.example files.
+- Update CORS origins in backend/server.js if deploying to different domains.
+- Ensure MongoDB is accessible from your deployment platform.
+- Test all integrations locally before deploying.
 
-- Serve frontend in dev mode (for local testing):
-  cd frontend
-  npm run dev
+## Quick Local Test
+- Backend: `cd backend && npm install && npm start`
+- Frontend: `cd frontend && npm install && npm run dev`
+- Admin: `cd admin/vite-project && npm install && npm run dev`
+- ChatGPT App: `cd chatgpt-app && npm install && npm run build && npm start`
