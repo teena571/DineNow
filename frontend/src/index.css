@@ -1,5 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 
+/* Import modal utilities */
+@import './components/LoginPopup/modal-utils.css';
+
 *{
   padding: 0;
   margin: 0;

@@ -103,7 +103,7 @@
 
 
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import './LoginPopup.css'
 import { assets } from '../../assets/assets'
 import { useNavigate } from 'react-router-dom'
@@ -114,12 +114,34 @@ import { useAuth } from '../../context/AuthContext'
 const LoginPopup = ({ setShowLogin }) => {
 
   const {url} = useContext(StoreContext)
-  const { login, signup } = useAuth()
+  const { login, register } = useAuth()
 
   const [currState, setCurrState] = useState("Sign Up")
   const [formData, setFormData] = useState({ name: "", email: "", password: "" })
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
+
+  // Lock body scroll when modal opens
+  useEffect(() => {
+    document.body.classList.add('modal-open')
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.classList.remove('modal-open')
+    }
+  }, [])
+
+  // Handle escape key
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        setShowLogin(false)
+      }
+    }
+    
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [setShowLogin])
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -130,7 +152,7 @@ const LoginPopup = ({ setShowLogin }) => {
     setLoading(true)
 
     const result = currState === "Sign Up"
-      ? await signup(formData.name, formData.email, formData.password)
+      ? await register(formData.name, formData.email, formData.password)
       : await login(formData.email, formData.password)
 
     setLoading(false)
@@ -143,61 +165,82 @@ const LoginPopup = ({ setShowLogin }) => {
     }
   }
 
+  // Close modal when clicking outside
+  const handleOverlayClick = (e) => {
+    if (e.target.classList.contains('login-popup-overlay')) {
+      setShowLogin(false)
+    }
+  }
+
   return (
-    <div className='login-popup'>
-      <form className="login-popup-container" onSubmit={handleSubmit}>
-        <div className="login-popup-title">
+    <div className='login-popup-overlay' onClick={handleOverlayClick}>
+      <div className="login-popup-container">
+        <div className="login-popup-header">
           <h2>{currState}</h2>
-          <img onClick={() => setShowLogin(false)} src={assets.cross_icon} alt="close" />
+          <button 
+            type="button"
+            className="login-popup-close"
+            onClick={() => setShowLogin(false)}
+            aria-label="Close modal"
+          >
+            <img src={assets.cross_icon} alt="close" />
+          </button>
         </div>
 
-        <div className="login-popup-inputs">
-          {currState === "Sign Up" && (
+        <form onSubmit={handleSubmit}>
+          <div className="login-popup-inputs">
+            {currState === "Sign Up" && (
+              <input
+                type="text"
+                name="name"
+                placeholder="Enter Name"
+                required
+                value={formData.name}
+                onChange={handleChange}
+              />
+            )}
             <input
-              type="text"
-              name="name"
-              placeholder="Enter Name"
+              type="email"
+              name="email"
+              placeholder="Enter Email"
               required
+              value={formData.email}
               onChange={handleChange}
             />
-          )}
-          <input
-            type="email"
-            name="email"
-            placeholder="Enter Email"
-            required
-            onChange={handleChange}
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Enter Password"
-            required
-            onChange={handleChange}
-          />
-        </div>
+            <input
+              type="password"
+              name="password"
+              placeholder="Enter Password"
+              required
+              value={formData.password}
+              onChange={handleChange}
+            />
+          </div>
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Please wait..." : currState === "Sign Up" ? "Create Account" : "Login"}
-        </button>
+          <button type="submit" disabled={loading} className="login-popup-submit">
+            {loading ? "Please wait..." : currState === "Sign Up" ? "Create Account" : "Login"}
+          </button>
 
-        <div className="login-popup-condition">
-          <input type="checkbox" required />
-          <p>By continuing, I agree to the terms of use & privacy policy.</p>
-        </div>
+          <div className="login-popup-condition">
+            <input type="checkbox" required />
+            <p>By continuing, I agree to the terms of use & privacy policy.</p>
+          </div>
 
-        {currState === "Login" ? (
-          <p>
-            Create a new account?{" "}
-            <span onClick={() => setCurrState("Sign Up")}>Click here</span>
-          </p>
-        ) : (
-          <p>
-            Already have an account?{" "}
-            <span onClick={() => setCurrState("Login")}>Login here</span>
-          </p>
-        )}
-      </form>
+          <div className="login-popup-switch">
+            {currState === "Login" ? (
+              <p>
+                Create a new account?{" "}
+                <span onClick={() => setCurrState("Sign Up")}>Click here</span>
+              </p>
+            ) : (
+              <p>
+                Already have an account?{" "}
+                <span onClick={() => setCurrState("Login")}>Login here</span>
+              </p>
+            )}
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

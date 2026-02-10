@@ -50,7 +50,6 @@ import MyTable from './pages/MyTable/MyTable.jsx'
 import Login from './pages/Login/Login'
 import Register from './pages/Register/Register'
 import Signup from './pages/Signup/Signup'
-import { Toaster } from 'react-hot-toast'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { useAuth } from './context/AuthContext'
@@ -61,7 +60,10 @@ const App = () => {
 
   return (
     <>
+      {/* Login Modal - Highest Z-Index */}
       {showLogin && <LoginPopup setShowLogin={setShowLogin} />}
+      
+      {/* Main App Content */}
       <div className='app'>
         <Navbar setShowLogin={setShowLogin} />
         <Routes>
@@ -108,27 +110,26 @@ const App = () => {
             </ProtectedRoute>
           } />
           
-          {/* Admin Routes - Add your admin pages here */}
-          {/* <Route path='/admin' element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } /> */}
-          
-          {/* Kitchen/Staff Routes - Add your kitchen pages here */}
-          {/* <Route path='/kitchen' element={
-            <ProtectedRoute allowedRoles={['staff', 'admin']}>
-              <KitchenDashboard />
-            </ProtectedRoute>
-          } /> */}
-          
           {/* Catch-all route - redirect to home */}
           <Route path='*' element={<Navigate to="/" replace />} />
         </Routes>
       </div>
       <Footer />
-      <Toaster />
-      <ToastContainer />
+      
+      {/* Toast Notifications - Below Modal */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        style={{ zIndex: 9998 }} // Below modal (9999) but above everything else
+      />
     </>
   )
 }
