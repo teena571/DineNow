@@ -20,17 +20,7 @@ export const AuthProvider = ({ children }) => {
 
   // Configure axios defaults
   axios.defaults.withCredentials = true;
-
-  // Auto refresh token before expiry
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (isAuthenticated) {
-        refreshToken();
-      }
-    }, 14 * 60 * 1000); // Refresh every 14 minutes (before 15 min expiry)
-
-    return () => clearInterval(interval);
-  }, [isAuthenticated]);
+  axios.defaults.baseURL = API_URL;
 
   // Check authentication on mount
   useEffect(() => {
@@ -39,49 +29,39 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const response = await axios.get(`${API_URL}/auth/profile`);
-      if (response.data.success) {
-        setUser(response.data.user);
-        setIsAuthenticated(true);
+      const token = localStorage.getItem('token');
+      if (token) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        const response = await axios.get('/auth/profile');
+        if (response.data.success) {
+          setUser(response.data.user);
+          setIsAuthenticated(true);
+        }
       }
     } catch (error) {
-      if (error.response?.data?.expired) {
-        await refreshToken();
-      } else {
-        setUser(null);
-        setIsAuthenticated(false);
-      }
+      console.error('Auth check failed:', error);
+      localStorage.removeItem('token');
+      delete axios.defaults.headers.common['Authorization'];
+      setUser(null);
+      setIsAuthenticated(false);
     } finally {
       setLoading(false);
     }
   };
 
-  const refreshToken = async () => {
-    try {
-      const response = await axios.post(`${API_URL}/auth/refresh`);
-      if (response.data.success) {
-        setUser(response.data.user);
-        setIsAuthenticated(true);
-        return true;
-      }
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      setUser(null);
-      setIsAuthenticated(false);
-      return false;
-    }
-  };
-
   const register = async (name, email, password) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/register`, {
+      const response = await axios.post('/auth/register', {
         name,
         email,
         password
       });
       
       if (response.data.success) {
-        setUser(response.data.user);
+        const { token, user } = response.data;
+        localStorage.setItem('token', token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        setUser(user);
         setIsAuthenticated(true);
         return { success: true, message: response.data.message };
       }
@@ -95,15 +75,18 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, {
+      const response = await axios.post('/auth/login', {
         email,
         password
       });
       
       if (response.data.success) {
-        setUser(response.data.user);
+        const { token, user } = response.data;
+        localStorage.setItem('token', token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        setUser(user);
         setIsAuthenticated(true);
-        return { success: true, user: response.data.user };
+        return { success: true, user };
       }
     } catch (error) {
       return {
@@ -113,31 +96,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const googleLogin = async (credentialResponse) => {
-    try {
-      const response = await axios.post(`${API_URL}/auth/google`, {
-        token: credentialResponse.credential
-      });
-      
-      if (response.data.success) {
-        setUser(response.data.user);
-        setIsAuthenticated(true);
-        return { success: true, user: response.data.user };
-      }
-    } catch (error) {
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Google login failed'
-      };
-    }
-  };
-
   const logout = async () => {
     try {
-      await axios.post(`${API_URL}/auth/logout`);
+      await axios.post('/auth/logout');
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      localStorage.removeItem('token');
+      delete axios.defaults.headers.common['Authorization'];
       setUser(null);
       setIsAuthenticated(false);
     }
@@ -149,9 +115,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     register,
     login,
-    googleLogin,
-    logout,
-    refreshToken
+    logout
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

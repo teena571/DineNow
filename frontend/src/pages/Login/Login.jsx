@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import './Login.css';
@@ -10,58 +9,35 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { login, googleLogin } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const result = await login(email, password);
-    
-    if (result.success) {
-      toast.success('Login successful!');
+    try {
+      const result = await login(email, password);
       
-      // Redirect based on role
-      if (result.user.role === 'admin') {
-        navigate('/admin');
-      } else if (result.user.role === 'staff') {
-        navigate('/kitchen');
+      if (result.success) {
+        toast.success('Login successful!');
+        
+        // Redirect based on role
+        if (result.user.role === 'admin') {
+          navigate('/admin');
+        } else if (result.user.role === 'staff') {
+          navigate('/kitchen');
+        } else {
+          navigate('/');
+        }
       } else {
-        navigate('/');
+        toast.error(result.message || 'Login failed');
       }
-    } else {
-      toast.error(result.message);
+    } catch (error) {
+      toast.error('Login failed. Please try again.');
     }
     
     setLoading(false);
-  };
-
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setLoading(true);
-    
-    const result = await googleLogin(credentialResponse);
-    
-    if (result.success) {
-      toast.success('Google login successful!');
-      
-      // Redirect based on role
-      if (result.user.role === 'admin') {
-        navigate('/admin');
-      } else if (result.user.role === 'staff') {
-        navigate('/kitchen');
-      } else {
-        navigate('/');
-      }
-    } else {
-      toast.error(result.message);
-    }
-    
-    setLoading(false);
-  };
-
-  const handleGoogleError = () => {
-    toast.error('Google login failed. Please try again.');
   };
 
   return (
@@ -113,27 +89,6 @@ const Login = () => {
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
-          </div>
-
-          <div className="divider">
-            <div className="divider-line">
-              <div className="divider-border" />
-            </div>
-            <div className="divider-text">
-              <span>Or continue with</span>
-            </div>
-          </div>
-
-          <div className="google-login-wrapper">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={handleGoogleError}
-              useOneTap
-              theme="outline"
-              size="large"
-              text="signin_with"
-              shape="rectangular"
-            />
           </div>
         </form>
       </div>
