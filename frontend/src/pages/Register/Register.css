@@ -1,0 +1,126 @@
+.register-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f9fafb;
+  padding: 3rem 1rem;
+}
+
+.register-box {
+  max-width: 28rem;
+  width: 100%;
+}
+
+.register-header {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.register-title {
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.register-subtitle {
+  margin-top: 0.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.register-link {
+  font-weight: 500;
+  color: #ff6b35;
+  text-decoration: none;
+}
+
+.register-link:hover {
+  color: #ff5722;
+}
+
+.register-form {
+  margin-top: 2rem;
+}
+
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-input-register {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.form-input-register:focus {
+  border-color: #ff6b35;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.register-button {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  color: white;
+  background-color: #ff6b35;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 1rem;
+}
+
+.register-button:hover:not(:disabled) {
+  background-color: #ff5722;
+}
+
+.register-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.divider {
+  position: relative;
+  margin: 1.5rem 0;
+}
+
+.divider-line {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+}
+
+.divider-border {
+  width: 100%;
+  border-top: 1px solid #d1d5db;
+}
+
+.divider-text {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  font-size: 0.875rem;
+}
+
+.divider-text span {
+  padding: 0 0.5rem;
+  background-color: #f9fafb;
+  color: #6b7280;
+}
+
+.google-login-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}

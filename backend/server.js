@@ -92,9 +92,12 @@
 
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { connectDB } from "./config/db.js";
 import foodRouter from "./routes/foodRoute.js";
-import userRouter from "./routes/userRoute.js";
+import authRouter from "./routes/authRoutes.js";
 import "dotenv/config";
 import cartRouter from "./routes/cartRoute.js";
 import orderRouter from "./routes/orderRoute.js";
@@ -104,16 +107,58 @@ import tableRouter from "./routes/tableRoute.js";
 const app = express();
 const port = process.env.PORT || 5000;
 
+// ============================
+// Security Middleware
+// ============================
+
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.'
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5, // Limit auth attempts
+  message: 'Too many authentication attempts, please try again later.'
+});
+
+app.use('/api/', limiter);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+
+// ============================
+// Body Parser & Cookie Parser
+// ============================
+
 app.use(express.json());
-
+app.use(cookieParser());
 
 // ============================
-// ✅ FIXED CORS (ALLOW ALL PORTS)
+// CORS for localhost:5173
 // ============================
-// ❌ Removed whitelist logic
-// ✅ Allow everything (dev friendly)
 
-app.use(cors());
+const allowedOrigins = [
+  'http://localhost:5173',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  credentials: true,
+}));
 
 
 // ============================
@@ -170,7 +215,7 @@ seedTables();
 
 app.use("/api/food", foodRouter);
 app.use("/images", express.static("uploads"));
-app.use("/api/user", userRouter);
+app.use("/api/auth", authRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/gemini", geminiRouter);
@@ -181,6 +226,6 @@ app.use("/api/tables", tableRouter);
 // Start server
 // ============================
 
-app.listen(port, "0.0.0.0", () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`🚀 Server Started on http://localhost:${port}`);
 });

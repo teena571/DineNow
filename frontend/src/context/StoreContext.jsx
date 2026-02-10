@@ -7,7 +7,7 @@ const StoreContextProvider = (props) => {
 
     const [cartItems, setCartItems] = useState({});
     // Determine API base from Vite env, remove any trailing /api so existing code can append /api/*
-    const envApi = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+    const envApi = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
     const url = envApi.replace(/\/api\/?$/, "");
     const [token,setToken] = useState("");
     const [food_list,setFoodList] = useState([])

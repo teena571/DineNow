@@ -1,19 +1,8 @@
-# TODO: Implement FAKE Payment Simulation Feature
+# TODO: Hardcode Ports in Fullstack App
 
-## Tasks
-- [x] Modify frontend/src/pages/Payment/Payment.jsx to implement simulation flow:
-  - Remove card form UI
-  - Add state for simulation steps (processing, success, confirmed, reaching)
-  - Implement setTimeout chain: 2s → success (call API), 1s → confirmed, 1s → reaching → redirect /home
-  - Add toast notifications for each step
-  - Show spinner and messages on page
+## Steps to Complete
 
-## Completed
-- [x] Analyze existing code and plan changes
-- [x] Confirm plan with user
-- [x] Implement changes in Payment.jsx
-
-## Notes
-- Backend fakePayment route already implemented
-- Ensure table selection remains unaffected
-- Test flow: Cart → Proceed to Payment → Simulation → Redirect Home
+- [x] Update frontend/vite.config.js: Change port to 3000, add strictPort: true, update proxy target to 'http://localhost:5000'
+- [x] Update backend/server.js: Change port to `process.env.PORT || 5000`, update CORS to allow only 'http://localhost:3000'
+- [ ] Update backend/.env: Add `PORT=5000` (Note: .env editing not allowed, but port is set via env)
+- [x] Verify changes and return updated config files

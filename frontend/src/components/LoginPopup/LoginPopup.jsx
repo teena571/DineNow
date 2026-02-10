@@ -109,10 +109,12 @@ import { assets } from '../../assets/assets'
 import { useNavigate } from 'react-router-dom'
 import { useContext } from 'react'
 import { StoreContext } from '../../context/StoreContext'
+import { useAuth } from '../../context/AuthContext'
 
 const LoginPopup = ({ setShowLogin }) => {
 
   const {url} = useContext(StoreContext)
+  const { login, signup } = useAuth()
 
   const [currState, setCurrState] = useState("Sign Up")
   const [formData, setFormData] = useState({ name: "", email: "", password: "" })
@@ -127,37 +129,17 @@ const LoginPopup = ({ setShowLogin }) => {
     e.preventDefault()
     setLoading(true)
 
-    const endpoint =
-      currState === "Sign Up"
-        ? `${url}/api/user/register`
-        : `${url}/api/user/login`
+    const result = currState === "Sign Up"
+      ? await signup(formData.name, formData.email, formData.password)
+      : await login(formData.email, formData.password)
 
-    const payload =
-      currState === "Sign Up"
-        ? { name: formData.name, email: formData.email, password: formData.password }
-        : { email: formData.email, password: formData.password }
+    setLoading(false)
 
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-
-      const data = await res.json()
-
-      if (data.success) {
-        localStorage.setItem("token", data.token)
-        setShowLogin(false)
-        navigate("/") // redirect after successful login/signup
-      } else {
-        alert(data.message || "Something went wrong")
-      }
-    } catch (error) {
-      console.error(error)
-      alert("Server error. Try again later.")
-    } finally {
-      setLoading(false)
+    if (result.success) {
+      setShowLogin(false)
+      navigate("/") // redirect after successful login/signup
+    } else {
+      alert(result.message || "Something went wrong")
     }
   }
 

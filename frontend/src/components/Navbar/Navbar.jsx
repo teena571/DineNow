@@ -59,12 +59,14 @@ import './Navbar.css'
 import { assets } from '../../assets/assets'
 import { Link, useNavigate } from 'react-router-dom'
 import { StoreContext } from '../../context/StoreContext'
+import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
 const Navbar = ({ setShowLogin }) => {
 
   const [menu, setMenu] = useState("home");
   const { getTotalCartAmount, setToken, searchTerm, setSearchTerm, setSearchResults, food_list } = useContext(StoreContext);
+  const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
@@ -73,6 +75,12 @@ const Navbar = ({ setShowLogin }) => {
     localStorage.removeItem("token");
     setToken("");
     navigate("/");
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    logOut(); // Also clear old token
+    toast.success('Logged out successfully');
   };
 
   const handleSearch = async (e) => {
@@ -149,7 +157,7 @@ const Navbar = ({ setShowLogin }) => {
           <button className="chat-btn">💬 Chat</button>
         </Link>
 
-        {!token ? (
+        {!isAuthenticated && !token ? (
           <button onClick={() => setShowLogin(true)}>Sign In</button>
         ) : (
           <div className='navbar-profile'>
@@ -157,7 +165,7 @@ const Navbar = ({ setShowLogin }) => {
             <ul className="nav-profile-dropdown">
               <li><img src={assets.bag_icon} alt="" /><p>Orders</p></li>
               <hr />
-              <li onClick={logOut}><img src={assets.logout_icon} alt="" />Logout</li>
+              <li onClick={handleLogout}><img src={assets.logout_icon} alt="" />Logout</li>
             </ul>
           </div>
         )}
