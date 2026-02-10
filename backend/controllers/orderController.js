@@ -106,7 +106,7 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
 import reservationModel from "../models/reservationModel.js";
-import Razorpay from "razorpay";
+// import Razorpay from "razorpay"; // Commented out - not used in current implementation
 import 'dotenv/config';
 import crypto from "crypto";
 
