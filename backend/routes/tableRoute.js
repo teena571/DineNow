@@ -117,6 +117,17 @@ tableRouter.get('/drop', async (req, res) => {
   }
 });
 
+// Route to reset all tables to available (for testing)
+tableRouter.get('/reset', async (req, res) => {
+  try {
+    await tableModel.updateMany({}, { status: 'available' });
+    res.json({ success: true, message: 'All tables reset to available' });
+  } catch (error) {
+    console.error('Error resetting tables:', error);
+    res.json({ success: false, message: 'Error resetting tables' });
+  }
+});
+
 // GET /api/table/user/:userId - Get user's active reservation
 tableRouter.get('/user/:userId', async (req, res) => {
   try {

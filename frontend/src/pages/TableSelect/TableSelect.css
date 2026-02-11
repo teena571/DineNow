@@ -78,6 +78,10 @@
   color: #f44336;
 }
 
+.table-card.reserved .table-status {
+  color: #ff9800;
+}
+
 /* Modal Styles */
 .modal-overlay {
   position: fixed;
