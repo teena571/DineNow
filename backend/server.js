@@ -153,8 +153,11 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:5175',
+  'https://dine-now-one.vercel.app',
   process.env.FRONTEND_URL
 ].filter(Boolean);
+
+console.log('🌐 CORS allowed origins:', allowedOrigins);
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -162,10 +165,12 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.includes(origin)) {
+      console.log('✅ CORS allowed:', origin);
       callback(null, true);
     } else {
-      console.log('CORS blocked origin:', origin);
-      callback(null, true); // Allow in development
+      console.log('⚠️ CORS origin not in whitelist:', origin);
+      // In production, allow all origins temporarily for debugging
+      callback(null, true);
     }
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
