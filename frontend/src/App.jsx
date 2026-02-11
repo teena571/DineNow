@@ -57,11 +57,14 @@ import ProtectedRoute from './components/ProtectedRoute'
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false)
+  const { isAuthenticated } = useAuth()
 
   return (
     <>
-      {/* Login Modal - Highest Z-Index */}
-      {showLogin && <LoginPopup setShowLogin={setShowLogin} />}
+      {/* Login Modal - Only show if explicitly triggered and not on login page */}
+      {showLogin && !window.location.pathname.includes('/login') && (
+        <LoginPopup setShowLogin={setShowLogin} />
+      )}
       
       {/* Main App Content */}
       <div className='app'>

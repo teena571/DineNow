@@ -115,7 +115,14 @@ const Navbar = ({ setShowLogin }) => {
 
       <ul className="navbar-menu">
         <Link to='/' onClick={() => setMenu("home")} className={menu === "home" ? "active" : ""}>Home</Link>
-        <Link to='/table-select' onClick={() => setMenu("table")} className={menu === "table" ? "active" : ""}><span style={{ fontSize: '14px' }}>🪑</span> My Table</Link>
+        
+        {/* Only show My Table link when authenticated */}
+        {(isAuthenticated || token) && (
+          <Link to='/table-select' onClick={() => setMenu("table")} className={menu === "table" ? "active" : ""}>
+            <span style={{ fontSize: '14px' }}>🪑</span> My Table
+          </Link>
+        )}
+        
         <a href='#footer' onClick={() => setMenu("contact-us")} className={menu === "contact-us" ? "active" : ""}>Contact Us</a>
       </ul>
 
@@ -152,10 +159,12 @@ const Navbar = ({ setShowLogin }) => {
           <div className={getTotalCartAmount() === 0 ? "" : "dot"}></div>
         </div>
 
-        {/* ✅ Chatbot Button */}
-        <Link to="/chat">
-          <button className="chat-btn">💬 Chat</button>
-        </Link>
+        {/* ✅ Chatbot Button - Only show when authenticated */}
+        {(isAuthenticated || token) && (
+          <Link to="/chat">
+            <button className="chat-btn">💬 Chat</button>
+          </Link>
+        )}
 
         {!isAuthenticated && !token ? (
           <button onClick={() => setShowLogin(true)}>Sign In</button>
