@@ -149,12 +149,16 @@ app.use(cookieParser());
 // CORS Configuration
 // ============================
 
+// Build allowed origins from environment variables
+const frontendUrls = process.env.FRONTEND_URL 
+  ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
+  : [];
+
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:5175',
-  'https://dine-now-one.vercel.app',
-  process.env.FRONTEND_URL
+  ...frontendUrls
 ].filter(Boolean);
 
 console.log('🌐 CORS allowed origins:', allowedOrigins);
@@ -162,21 +166,27 @@ console.log('🌐 CORS allowed origins:', allowedOrigins);
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, Postman, curl)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('✅ CORS: No origin (server-to-server or tool)');
+      return callback(null, true);
+    }
     
     if (allowedOrigins.includes(origin)) {
       console.log('✅ CORS allowed:', origin);
       callback(null, true);
     } else {
       console.log('⚠️ CORS origin not in whitelist:', origin);
-      // In production, allow all origins temporarily for debugging
+      console.log('   Allowed origins:', allowedOrigins);
+      // Allow anyway for now, but log it
       callback(null, true);
     }
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'token'],
+  exposedHeaders: ['Content-Length', 'X-Request-Id'],
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  preflightContinue: false
 }));
 
 

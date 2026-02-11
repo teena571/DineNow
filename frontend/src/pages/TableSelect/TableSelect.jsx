@@ -201,7 +201,8 @@ const TableSelect = () => {
   // ================= FETCH TABLES =================
   const fetchTables = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/tables');
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${API_URL}/tables`);
       const data = await response.json();
 
       if (data.success) {
@@ -246,8 +247,9 @@ const TableSelect = () => {
     }
 
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const response = await fetch(
-        `http://localhost:5000/api/tables/reserve/${selectedTable.tableNo}`,
+        `${API_URL}/tables/reserve/${selectedTable.tableNo}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
